@@ -710,7 +710,7 @@ const [paymentMethod, setPaymentMethod] = useState<"UPI" | "COD">("UPI");
           </div>
           <div className="mm-footer-social">
             <span>FOLLOW THE MUSE</span>
-            <a href="https://instagram.com/" target="_blank" rel="noreferrer">INSTAGRAM ↗️</a>
+           <a href="https://www.instagram.com/kizzelle.studio/" target="_blank" rel="noreferrer">INSTAGRAM ↗</a>
           </div>
         </div>
         <div className="mm-footer-bottom">
