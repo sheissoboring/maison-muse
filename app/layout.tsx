@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   title: "MAISON MUSE — A Curated Fashion Edit",
   description:
     "Discover your aesthetic. Explore the world of MAISON MUSE.",
+    icons: {
+  icon: "/icon.svg",
+},
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
