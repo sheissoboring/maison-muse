@@ -1376,3 +1376,121 @@ h4,
     padding: 25px 5% 60px;
   }
 }
+/* MAISON MUSE — CINEMATIC FULLSCREEN MENU */
+
+.mm-menu-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #35101c;
+  color: #fff8f5;
+  padding: 35px 6%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow-y: auto;
+}
+
+.mm-menu-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  letter-spacing: 4px;
+}
+
+.mm-menu-top button {
+  background: transparent;
+  border: 0;
+  color: #fff8f5;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.mm-menu-links {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1000px;
+  margin: auto;
+}
+
+.mm-menu-links a {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  padding: 15px 0;
+  border-bottom: 1px solid rgba(255, 248, 245, 0.2);
+  color: #fff8f5;
+  text-decoration: none;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(38px, 7vw, 82px);
+  line-height: 1;
+  transition: color .35s ease, padding-left .35s ease;
+}
+
+.mm-menu-links a:hover {
+  color: #e7a7b3;
+  padding-left: 18px;
+}
+
+.mm-menu-links a small {
+  font-family: var(--font-body), sans-serif;
+  font-size: 10px;
+  letter-spacing: 2px;
+  opacity: .55;
+}
+
+.mm-menu-links a span {
+  margin-left: auto;
+  font-family: sans-serif;
+  font-size: 22px;
+  opacity: .65;
+}
+
+.mm-menu-footer {
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: #d6b8bd;
+}
+
+@media (max-width: 600px) {
+  .mm-menu-overlay {
+    padding: 25px 7%;
+  }
+
+  .mm-menu-links a {
+    font-size: 43px;
+    gap: 15px;
+  }
+}
+@media (max-width: 700px) {
+  .mm-header {
+    height: 75px;
+    padding: 0 5%;
+    gap: 10px;
+  }
+
+  .mm-mobile-menu {
+    display: block;
+    background: transparent;
+    border: none;
+    color: #fff8f5;
+    font-size: 25px;
+    cursor: pointer;
+    z-index: 30;
+  }
+
+  .mm-nav-left {
+    display: none;
+  }
+
+  .mm-logo {
+    font-size: 21px;
+    text-align: center;
+  }
+
+  .mm-header-actions {
+    gap: 8px;
+  }
+}

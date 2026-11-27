@@ -34,6 +34,8 @@ export default function Home() {
   const [sort, setSort] = useState("featured");
   const [wishlist, setWishlist] = useState<number[]>([]);
   const [showWishlist, setShowWishlist] = useState(false);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+  const [isSliderOpen, setIsSliderOpen] = useState(false);
   const [quickView, setQuickView] = useState<Product | null>(null);
   const [selectedSize, setSelectedSize] = useState("M");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -94,6 +96,22 @@ const [paymentMethod, setPaymentMethod] = useState<"UPI" | "COD">("UPI");
     return result;
   }, [category, search, sort, showWishlist, wishlist]);
 
+  const nextFeatured = () => {
+  setFeaturedIndex((current) =>
+    (current + 1) % filteredProducts.length
+  );
+};
+
+const prevFeatured = () => {
+  setFeaturedIndex((current) =>
+    (current - 1 + filteredProducts.length) % filteredProducts.length
+  );
+};
+const safeFeaturedIndex = filteredProducts.length
+  ? featuredIndex % filteredProducts.length
+  : 0;
+
+const featuredProduct = filteredProducts[safeFeaturedIndex];
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = cart.reduce(
     (sum, item) => sum + item.product.price * item.quantity,
@@ -216,13 +234,14 @@ const [paymentMethod, setPaymentMethod] = useState<"UPI" | "COD">("UPI");
 
       {/* Navigation */}
       <header className="mm-header">
-        <button
-          className="mm-mobile-menu"
-          onClick={() => setMobileMenu(!mobileMenu)}
-          aria-label="Toggle menu"
-        >
-          ☰
-        </button>
+        <motion.button
+  className="mm-mobile-menu"
+  onClick={() => setMobileMenu(true)}
+  aria-label="Open menu"
+  whileTap={{ scale: 0.85 }}
+>
+  ☰
+</motion.button>
 
         <nav className={`mm-nav-left ${mobileMenu ? "mm-nav-open" : ""}`}>
           <a href="#catalogue" onClick={() => chooseCategory("All")}>SHOP ALL</a>
@@ -254,7 +273,7 @@ const [paymentMethod, setPaymentMethod] = useState<"UPI" | "COD">("UPI");
   }}
   whileTap={{ scale: 0.85 }}
   animate={{ scale: [1, 1.08, 1] }}
-  key={wishlist.length}
+  key={`wishlist-${wishlist.length}`}
   transition={{ duration: 0.35 }}
 >
   ♡ <small>{wishlist.length || ""}</small>
@@ -264,35 +283,130 @@ const [paymentMethod, setPaymentMethod] = useState<"UPI" | "COD">("UPI");
   className="mm-icon-button mm-bag-button"
   onClick={() => setIsBagOpen(true)}
   animate={{ scale: [1, 1.08, 1] }}
-  key={cartCount}
+  key={`bag-${cartCount}`}
   transition={{ duration: 0.35 }}
 >
   BAG ({cartCount})
 </motion.button>
         </div>
       </header>
+      <AnimatePresence>
+  {mobileMenu && (
+    <motion.div
+      className="mm-menu-overlay"
+      initial={{ clipPath: "inset(0 0 0 100%)" }}
+      animate={{ clipPath: "inset(0 0 0 0%)" }}
+      exit={{ clipPath: "inset(0 0 0 100%)" }}
+      transition={{ duration: 0.75, ease: [0.76, 0, 0.24, 1] }}
+    >
+      <div className="mm-menu-top">
+        <span>MAISON MUSE</span>
+        <button onClick={() => setMobileMenu(false)}>
+          ✕
+        </button>
+      </div>
+
+      <nav className="mm-menu-links">
+        {[
+          ["01", "SHOP ALL", "#catalogue"],
+          ["02", "COQUETTE", "#catalogue"],
+          ["03", "OLD MONEY", "#catalogue"],
+          ["04", "OUR STORY", "#story"],
+        ].map(([number, label, link], index) => (
+          <motion.a
+            key={number}
+            href={link}
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.25 + index * 0.12 }}
+            onClick={() => {
+              if (label === "SHOP ALL") chooseCategory("All");
+              if (label === "COQUETTE") chooseCategory("Coquette & Soft Girl");
+              if (label === "OLD MONEY") chooseCategory("Old Money");
+              setMobileMenu(false);
+            }}
+          >
+            <small>{number}</small>
+            {label}
+            <span>↗</span>
+          </motion.a>
+        ))}
+      </nav>
+
+      <p className="mm-menu-footer">
+        THE ART OF GETTING DRESSED · EST. MAISON MUSE
+      </p>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* Hero — MAISON MUSE editorial campaign */}
       <section className="mm-hero">
-        <div className="mm-hero-image">
+        <motion.div
+  className="mm-hero-image"
+  initial={{ backgroundSize: "115% auto" }}
+  animate={{ backgroundSize: "100% auto" }}
+  transition={{ duration: 2.4, ease: [0.22, 1, 0.36, 1] }}
+>
           <div className="mm-hero-overlay" />
 
-          <motion.div
-            className="mm-hero-content"
-            initial={{ opacity: 0, y: 35 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, ease: "easeOut" }}
-          >
+         <motion.div
+  className="mm-hero-content"
+  initial={{ opacity: 0, y: 70, scale: 0.96 }}
+  animate={showIntro ? { opacity: 0, y: 70, scale: 0.96 } : { opacity: 1, y: 0, scale: 1 }}
+  transition={{
+    duration: 1.4,
+    ease: [0.22, 1, 0.36, 1],
+    delay: 0.5,
+  }}
+>
             <span className="mm-eyebrow">
-              MAISON MUSE PRESENTS · THE MUSE EDIT Nº 01
+              MAISON MUSE PRESENTS · THE MUSE EDIT No.01
             </span>
 
-            <h1>
-  Dress like
-  <br />
-  <i>you mean it.</i>
-</h1>
+            <motion.h1
+  initial="hidden"
+  animate={showIntro ? "hidden" : "visible"}
+  variants={{
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.35,
+        delayChildren: 0.9,
+      },
+    },
+  }}
+>
+  <motion.span
+    variants={{
+      hidden: { opacity: 0, y: 45, filter: "blur(10px)" },
+      visible: {
+        opacity: 1,
+        y: 0,
+        filter: "blur(0px)",
+        transition: { duration: 1.1 },
+      },
+    }}
+  >
+    Dress like
+  </motion.span>
 
+  <br />
+
+  <motion.span
+    variants={{
+      hidden: { opacity: 0, y: 45, filter: "blur(10px)" },
+      visible: {
+        opacity: 1,
+        y: 0,
+        filter: "blur(0px)",
+        transition: { duration: 1.1 },
+      },
+    }}
+  >
+    <i>you mean it.</i>
+  </motion.span>
+</motion.h1>
             <p>
               An expression of everything you are.
               <br />
@@ -311,7 +425,7 @@ const [paymentMethod, setPaymentMethod] = useState<"UPI" | "COD">("UPI");
           <div className="mm-hero-bottom">
             WEAR WHAT FEELS LIKE YOU. — MMXXVI
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Intro */}
@@ -537,104 +651,262 @@ const [paymentMethod, setPaymentMethod] = useState<"UPI" | "COD">("UPI");
           </button>
         </div>
 
-        {filteredProducts.length > 0 ? (
-          <motion.div layout className="mm-product-grid">
-            <AnimatePresence mode="popLayout">
-              {filteredProducts.map((product, index) => (
-                <motion.article
-                  layout
-                  key={product.id}
-                  className="mm-product-card"
-                  initial={{ opacity: 0, y: 25 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.94 }}
-                  transition={{ duration: 0.35, delay: Math.min(index % 8, 5) * 0.035 }}
-                >
-                  <div
-                    className="mm-product-image"
-                    onClick={() => {
-                      setQuickView(product);
-                      setSelectedSize("M");
-                    }}
-                  >
-                   <img
-  className="mm-product-main-image"
-  src={product.image}
-  alt={product.name}
-  loading="lazy"
-/>
-
-<span className="mm-discover-label">
-  DISCOVER ME ↗
-</span>
-                    <span className="mm-product-tag">{product.tag}</span>
-                    <motion.button
-  className={`mm-heart ${wishlist.includes(product.id) ? "mm-heart-active" : ""}`}
-  aria-label="Add to wishlist"
-  onClick={(e) => {
-    e.stopPropagation();
-    toggleWishlist(product.id);
-  }}
-  whileTap={{ scale: 0.7, rotate: -15 }}
-  animate={{
-    scale: wishlist.includes(product.id) ? [1, 1.35, 1] : 1,
-  }}
-  transition={{ duration: 0.3 }}
->
-  {wishlist.includes(product.id) ? "♥️" : "♡"}
-</motion.button>
-                  </div>
-
-                  <div className="mm-product-info">
-                    <div className="mm-product-category">{product.category}</div>
-                    <div className="mm-product-name-row">
-                      <h3>{product.name}</h3>
-                      <strong>{formatPrice(product.price)}</strong>
-                    </div>
-                    <p>{product.color} · {product.fabric}</p>
-                  </div>
-                </motion.article>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        ) : (
+        
+{isSliderOpen && featuredProduct ? (
+  <motion.section className="mm-cinematic-slider">
+    <div className="mm-slider-layout">
+      <div className="mm-slider-visual">
+        <AnimatePresence mode="wait">
           <motion.div
-  className="mm-empty"
-  initial={{ opacity: 0, y: 25 }}
-  animate={{ opacity: 1, y: 0 }}
-  transition={{ duration: 0.6 }}
->
-  <motion.span
-    animate={{ scale: [1, 1.15, 1] }}
-    transition={{ duration: 1.8, repeat: Infinity }}
-  >
-    ♡
-  </motion.span>
+            key={featuredProduct.id}
+            className="mm-slider-image-wrap"
+            initial={{ opacity: 0, scale: 1.04, x: 35 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.97, x: -25 }}
+            transition={{ duration: 0.65, ease: "easeInOut" }}
+            onClick={() => {
+              setQuickView(featuredProduct);
+              setSelectedSize("M");
+            }}
+          >
+            <motion.img
+              className="mm-slider-image"
+              src={featuredProduct.image}
+              alt={featuredProduct.name}
+              initial={{ scale: 1.12 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 1.2 }}
+            />
 
-  <h3>
-    {showWishlist
-      ? "Your love story starts here."
-      : "Nothing here just yet."}
-  </h3>
+            <span className="mm-slider-tag">
+              {featuredProduct.tag}
+            </span>
 
-  <p>
-    {showWishlist
-      ? "Save the pieces that make your heart skip a beat."
-      : "Try another search or explore the whole collection."}
-  </p>
+            <motion.button
+              className={`mm-heart ${
+                wishlist.includes(featuredProduct.id)
+                  ? "mm-heart-active"
+                  : ""
+              }`}
+              aria-label="Add to wishlist"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleWishlist(featuredProduct.id);
+              }}
+              whileTap={{ scale: 0.7, rotate: -15 }}
+            >
+              {wishlist.includes(featuredProduct.id) ? "♥" : "♡"}
+            </motion.button>
 
+            <span className="mm-slider-image-caption">
+              THE MAISON MUSE EDIT
+            </span>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+     <div className="mm-slider-copy">
   <button
-    className="mm-dark-button"
-    onClick={() => {
-      setSearch("");
-      setShowWishlist(false);
-      setCategory("All");
-    }}
+    className="mm-slider-back"
+    onClick={() => setIsSliderOpen(false)}
   >
-    EXPLORE EVERYTHING
+    ← BACK TO ALL DRESSES
   </button>
-</motion.div>
-        )}
+
+  <span className="mm-eyebrow">
+    THE PIECE THAT SPEAKS
+  </span>
+
+        <motion.span
+          key={featuredProduct.id + "-number"}
+          className="mm-slider-number"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+        >
+          0{safeFeaturedIndex + 1} /{" "}
+          {String(filteredProducts.length).padStart(2, "0")}
+        </motion.span>
+
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={featuredProduct.id + "-details"}
+            initial={{ opacity: 0, y: 25 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.45 }}
+          >
+            <span className="mm-slider-category">
+              {featuredProduct.category}
+            </span>
+
+            <h2 className="mm-slider-title">
+              {featuredProduct.name}<i>.</i>
+            </h2>
+
+            <p className="mm-slider-description">
+              A little statement. A little personality.
+              Entirely your own.
+            </p>
+
+            <div className="mm-slider-details">
+              <span>{featuredProduct.color}</span>
+              <span>{featuredProduct.fabric}</span>
+            </div>
+
+            <div className="mm-slider-price">
+              {formatPrice(featuredProduct.price)}
+            </div>
+
+            <button
+              className="mm-dark-button mm-slider-discover"
+              onClick={() => {
+                setQuickView(featuredProduct);
+                setSelectedSize("M");
+              }}
+            >
+              DISCOVER THIS PIECE ↗
+            </button>
+          </motion.div>
+        </AnimatePresence>
+
+        <div className="mm-slider-navigation">
+          <button
+            onClick={prevFeatured}
+            disabled={filteredProducts.length <= 1}
+            aria-label="Previous product"
+          >
+            ←
+          </button>
+
+          <span>SWIPE THROUGH THE EDIT</span>
+
+          <button
+            onClick={nextFeatured}
+            disabled={filteredProducts.length <= 1}
+            aria-label="Next product"
+          >
+            →
+          </button>
+        </div>
+      </div>
+    </div>
+  </motion.section>
+) : filteredProducts.length > 0 ? (
+  <motion.div layout className="mm-product-grid">
+    <AnimatePresence mode="popLayout">
+      {filteredProducts.map((product, index) => (
+        <motion.article
+          layout
+          key={product.id}
+          className="mm-product-card"
+          initial={{ opacity: 0, y: 25 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.94 }}
+          transition={{
+            duration: 0.35,
+            delay: Math.min(index % 8, 5) * 0.035
+          }}
+        >
+          <div
+            className="mm-product-image"
+            onClick={() => {
+              setFeaturedIndex(index);
+              setIsSliderOpen(true);
+            }}
+          >
+            <img
+              className="mm-product-main-image"
+              src={product.image}
+              alt={product.name}
+              loading="lazy"
+            />
+
+            <span className="mm-discover-label">
+              DISCOVER ME ↗
+            </span>
+
+            <span className="mm-product-tag">
+              {product.tag}
+            </span>
+
+            <motion.button
+              className={`mm-heart ${
+                wishlist.includes(product.id)
+                  ? "mm-heart-active"
+                  : ""
+              }`}
+              aria-label="Add to wishlist"
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleWishlist(product.id);
+              }}
+              whileTap={{ scale: 0.7, rotate: -15 }}
+              animate={{
+                scale: wishlist.includes(product.id)
+                  ? [1, 1.35, 1]
+                  : 1
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {wishlist.includes(product.id) ? "♥" : "♡"}
+            </motion.button>
+          </div>
+
+          <div className="mm-product-info">
+            <div className="mm-product-category">
+              {product.category}
+            </div>
+
+            <div className="mm-product-name-row">
+              <h3>{product.name}</h3>
+              <strong>{formatPrice(product.price)}</strong>
+            </div>
+
+            <p>{product.color} · {product.fabric}</p>
+          </div>
+        </motion.article>
+      ))}
+    </AnimatePresence>
+  </motion.div>
+) : (
+  <motion.div
+    className="mm-empty"
+    initial={{ opacity: 0, y: 25 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6 }}
+  >
+    <motion.span
+      animate={{ scale: [1, 1.15, 1] }}
+      transition={{ duration: 1.8, repeat: Infinity }}
+    >
+      ♡
+    </motion.span>
+
+    <h3>
+      {showWishlist
+        ? "Your love story starts here."
+        : "Nothing here just yet."}
+    </h3>
+
+    <p>
+      {showWishlist
+        ? "Save the pieces that make your heart skip a beat."
+        : "Try another search or explore the whole collection."}
+    </p>
+
+    <button
+      className="mm-dark-button"
+      onClick={() => {
+        setSearch("");
+        setShowWishlist(false);
+        setCategory("All");
+      }}
+    >
+      EXPLORE EVERYTHING
+    </button>
+  </motion.div>
+)}
+
       </motion.div>
         )}
         </AnimatePresence>
@@ -3680,6 +3952,244 @@ background: transparent;;
     opacity: 1;
     transform: none;
   }
+}
+
+/* ==================================
+   MAISON MUSE — CINEMATIC SLIDER
+================================== */
+
+.mm-cinematic-slider {
+  padding: 35px 0 90px;
+  overflow: hidden;
+}
+
+.mm-slider-layout {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 7%;
+}
+
+.mm-slider-visual {
+  position: relative;
+  overflow: hidden;
+  background: #e9dfd7;
+}
+
+.mm-slider-image-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.mm-slider-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.mm-slider-tag {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  background: #fffaf5;
+  color: #35151d;
+  padding: 10px 15px;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.mm-slider-image-caption {
+  position: absolute;
+  bottom: 22px;
+  left: 22px;
+  color: white;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-shadow: 0 1px 8px #000;
+}
+
+.mm-slider-copy {
+  position: relative;
+  padding: 35px 5% 35px 0;
+}
+
+.mm-slider-number {
+  display: block;
+  margin: 35px 0 55px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #987d77;
+}
+
+.mm-slider-category {
+  display: block;
+  margin-bottom: 18px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #C5A9A2;
+  text-transform: uppercase;
+}
+
+.mm-slider-title {
+  max-width: 520px;
+  font-family: var(--mm-serif, Georgia), Georgia, serif;
+  font-size: clamp(45px, 6vw, 86px);
+  line-height: 0.98;
+  font-weight: 400;
+  letter-spacing: -2px;
+  color: #F3E7DC;
+  overflow-wrap: anywhere;
+}
+
+.mm-slider-title i {
+  color: #A51D3D;
+  font-weight: 400;
+}
+
+.mm-slider-description {
+  max-width: 320px;
+  margin-top: 25px;
+  color: #C3B2AC;
+  font-size: 12px;
+  line-height: 2;
+}
+
+.mm-slider-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 30px;
+}
+
+.mm-slider-details span {
+  border: 1px solid #ded1c9;
+  padding: 10px 13px;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.mm-slider-price {
+  margin-top: 30px;
+  font-family: Georgia, serif;
+  font-size: 25px;
+  color: #E8C9B9;
+}
+
+.mm-slider-discover {
+  margin-top: 28px;
+  min-height: 48px;
+}
+
+.mm-slider-navigation {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  margin-top: 65px;
+}
+
+.mm-slider-navigation button {
+  width: 43px;
+  height: 43px;
+  border: 1px solid #d8c8c0;
+  border-radius: 50%;
+  background: transparent;
+  color: #35151d;
+  font-size: 19px;
+  cursor: pointer;
+  transition: .3s ease;
+}
+
+.mm-slider-navigation button:hover:not(:disabled) {
+  background: #35151d;
+  color: white;
+}
+
+.mm-slider-navigation button:disabled {
+  opacity: .3;
+  cursor: not-allowed;
+}
+
+.mm-slider-navigation span {
+  font-size: 8px;
+  letter-spacing: 2px;
+  color: #987d77;
+}
+
+/* TABLET */
+@media (max-width: 900px) {
+  .mm-slider-layout {
+    grid-template-columns: 1fr 0.9fr;
+    gap: 5%;
+  }
+
+  .mm-slider-title {
+    font-size: clamp(40px, 6vw, 65px);
+  }
+
+  .mm-slider-number {
+    margin: 25px 0 35px;
+  }
+}
+
+/* MOBILE */
+@media (max-width: 600px) {
+  .mm-cinematic-slider {
+    padding: 15px 0 55px;
+  }
+
+  .mm-slider-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .mm-slider-image-wrap {
+    aspect-ratio: 4 / 5;
+  }
+
+  .mm-slider-copy {
+    padding: 15px 5px;
+  }
+
+  .mm-slider-number {
+    margin: 20px 0 28px;
+  }
+
+  .mm-slider-title {
+    font-size: clamp(43px, 12vw, 65px);
+  }
+
+  .mm-slider-description {
+    margin-top: 18px;
+  }
+
+  .mm-slider-navigation {
+    margin-top: 35px;
+  }
+}
+
+/* BACK TO CATALOGUE */
+.mm-slider-back {
+  display: inline-block;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 25px;
+  color: #8e6f68;
+  font-size: 9px;
+  letter-spacing: 1.8px;
+  cursor: pointer;
+  transition: color .3s ease, transform .3s ease;
+}
+.mm-slider-back:hover {
+  color: #8e142d;
+  transform: translateX(-5px);
 }
       `}</style>
     </main>
